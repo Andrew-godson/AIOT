@@ -4,6 +4,8 @@ const {check,validationResult}=require("express-validator");
 const User=require("../../models/Users");
 const grav=require('gravatar');
 const bycrpt=require('bcryptjs');
+const jwt=require('jsonwebtoken');
+const config=require('config');
 
 router.post('/',[
 check("name","Enter Your Name").not().isEmpty(),
@@ -38,9 +40,25 @@ async(req,res)=>{
         const salt=await bycrpt.genSalt(10);
         newuser.password=await bycrpt.hash(password,salt);
         await newuser.save();
+        // JSONWEBTOKEN
+        const payload={
+        user:{
+            id:newuser.id
+        }
+        }
+        jwt.sign(
+            payload,
+            config.get('jwtToken'),
+            {expiresIn:3600},
+            (err,token)=>{
+                if(err) throw err;
+                res.json({token})
+            }
+
+        )
 
 
-        res.send('User Registered!!!');
+        
     }
     catch(err){
 console.error(err);
